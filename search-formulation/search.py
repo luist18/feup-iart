@@ -1,3 +1,6 @@
+import sys
+
+
 class Node:
     def __init__(self, state, parent=None, cost=0, function=None):
         self.state = state
@@ -40,7 +43,7 @@ def bfs(state, functions, objective):
 
     solution = node_bfs(queue, functions, objective)
 
-    return (solution.path_to_root(), solution.cost) if solution != None else None
+    return (solution.path_to_root(), solution.cost) if solution != None else (None, None)
 
 
 def node_bfs(queue, functions, objective):
@@ -121,7 +124,22 @@ def iterative_deepening(state, functions, objective, max_depth):
 
 
 def ex1_pretty_print_path(path):
+    if path == None:
+        print("No solution")
+        return
+
     path = list(map(lambda node:
                     (f"then {node.function} and get " if node.parent else "") + f"({node.state[0]}, {node.state[1]})", path))
+
+    print(" ".join(path))
+
+
+def ex2_pretty_print_path(path):
+    if path == None:
+        print("No solution")
+        return
+
+    path = list(map(lambda node:
+                    (f"then move {node.function} and get " if node.parent else "") + f"{node.state[0]}, {node.state[1]}", path))
 
     print(" ".join(path))
