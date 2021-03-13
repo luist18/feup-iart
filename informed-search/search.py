@@ -1,8 +1,12 @@
+from heapq import *
+
+
 class Node:
-    def __init__(self, state, parent=None, cost=0, function=None):
+    def __init__(self, state, parent=None, cost=0, function=None, heuristic=0):
         self.state = state
         self.parent = parent
         self.cost = cost
+        self.heuristic = heuristic
         self.function = function
 
     def is_root(self):
@@ -31,6 +35,16 @@ class Node:
             return [self]
 
         return self.parent.path_to_root() + [self]
+
+    def __lt__(self, other):
+        return self.cost + self.heuristic < other.cost + other.heuristic
+
+    def __eq__(self, other):
+        if(other == None):
+            return False
+        if(not isinstance(other, Node)):
+            return False
+        return self.state == other.state and self.parent == other.parent
 
 
 def bfs(state, functions, objective):
@@ -120,23 +134,37 @@ def iterative_deepening(state, functions, objective, max_depth):
     return result
 
 
-def ex1_pretty_print_path(path):
-    if path == None:
-        print("No solution")
-        return
+def a_star(state, functions, objective, heuristic):
+    start_node = Node(state)
 
-    path = list(map(lambda node:
-                    (f"then {node.function} and get " if node.parent else "") + f"({node.state[0]}, {node.state[1]})", path))
+    heap = []
+    heappush(heap, start_node)
 
-    print(" ".join(path))
+    solution = node_a_star(heap, functions, objective, heuristic)
+
+    return (solution.path_to_root(), solution.cost) if solution != None else None
 
 
-def ex2_pretty_print_path(path):
-    if path == None:
-        print("No solution")
-        return
+def node_a_star(heap, functions, objective, heuristic):
+    if not heap:
+        return None
 
-    path = list(map(lambda node:
-                    (f"then move {node.function} and get " if node.parent else "") + f"{node.state[0]}, {node.state[1]}", path))
+    current_node = heappop(heap)
 
-    print(" ".join(path))
+    if objective(*(current_node.state)):
+        return current_node
+
+    for function in functions:
+        call = function(*(current_node.state))
+
+        function_name = function.__name__
+
+        if call != False:
+            child = Node(call, current_node, current_node.cost +
+                         1, function=function_name)
+
+            if not child.is_repeated():
+                child.heuristic = heuristic(*(child.state))
+                heappush(heap, child)
+
+    return node_a_star(heap, functions, objective, heuristic)
